@@ -248,6 +248,7 @@ if player1 == 2 and player2 == 2:
 	jumlah_experimen = None
 	koefisien = None
 	output_file = filename
+	jumlah_experimen_awal = 0
 	while True:
 		if jumlah_experimen is None:
 			jumlah_experimen = input("\nMasukkan jumlah experimen : ")
@@ -346,6 +347,16 @@ elif (player1 == 2 or player2 == 2 ) and mode_data == "1":
 					print("\nInput harus berada diantara pada 0 <= N <= 1")
 					explorasi = None
 					continue
+			else:
+				print("\nInput harus berupa float")
+				explorasi = None
+				continue
+		if belajar is not None and jumlah_experimen_awal is not None and koefisien is not None and explorasi is not None:
+			break;
+
+	while True:
+		belajar_lagi = None
+		explorasi_selanjutnya = None
 		if belajar_lagi is None:
 			belajar_lagi = input("\nAI melakukan pembelajaran lagi saat bermain ? [y/n] : ")
 			if belajar_lagi not in ["y","Y","N","n"]:
@@ -365,9 +376,7 @@ elif (player1 == 2 or player2 == 2 ) and mode_data == "1":
 								continue
 				else:
 					explorasi_selanjutnya = 0
-
-		if belajar is not None and belajar_lagi is not None and jumlah_experimen_awal is not None and koefisien is not None and explorasi is not None and explorasi_selanjutnya is not None:
-			jumlah_experimen = 1			
+		if belajar_lagi is not None and explorasi_selanjutnya is not None:
 			break
 else:
 	mode = 2
