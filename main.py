@@ -82,7 +82,7 @@ def aiTurn(data,win_condition,explorasi,koefisien,print_gak):
 				print("  " + str(data["child"][i]["form"][j]) + "  ",end="")
 			print("\t"+str(data["child"][i]['x']))
 
-		print("\nAI memilih langkah ke " + str(index_terbaik+1))
+		print("\nAI memilih langkah ke " + str(index+1))
 	return data['child'][index]
 
 def playerTurn(data, win_condition,player):
@@ -313,9 +313,9 @@ elif (player1 == 2 or player2 == 2 ) and mode_data == "1":
 			else:
 				if belajar in ["n","N"]:
 					jumlah_experimen_awal = 0
-					koefisien_awal = 0
-					explorasi_awal = 0
-		if jumlah_experimen_awal is None and (belajar in ['y','Y'] or belajar_lagi in ['y','Y'] ):
+					koefisien = 0
+					explorasi = 0
+		if jumlah_experimen_awal is None and (belajar in ['y','Y'] ):
 			jumlah_experimen_awal = input("\nMasukkan jumlah experimen : ")
 			if RepresentsInt(jumlah_experimen_awal):
 				jumlah_experimen_awal = int(jumlah_experimen_awal)
@@ -327,7 +327,7 @@ elif (player1 == 2 or player2 == 2 ) and mode_data == "1":
 				print("\nInput harus berupa integer")
 				jumlah_experimen_awal = None
 				continue
-		if koefisien is None and (belajar in ['y','Y'] or belajar_lagi in ['y','Y']):
+		if koefisien is None and (belajar in ['y','Y'] ):
 			koefisien = input("\nMasukkan nilai koefisien [0 - 1] : ")
 			if RepresentsFloat(koefisien):
 				koefisien = float(koefisien)
@@ -339,7 +339,7 @@ elif (player1 == 2 or player2 == 2 ) and mode_data == "1":
 				print("\nInput harus berupa float")
 				koefisien = None
 				continue
-		if explorasi is None and (belajar in ['y','Y'] or belajar_lagi in ['y','Y']):
+		if explorasi is None and (belajar in ['y','Y'] ):
 			explorasi = input("\nMasukkan persentase explorasi [0-1] : ")
 			if RepresentsFloat(explorasi):
 				explorasi = float(explorasi)
