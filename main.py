@@ -73,7 +73,7 @@ def aiTurn(data,win_condition,explorasi,koefisien,print_gak):
 				else:
 					if data['child'][i]['x'] < data['child'][index_terbaik]['x']:
 						index_terbaik = i
-
+		index = index_terbaik
 	if print_gak == 1:
 		print("\n")
 		for i in range(0,len(data['child'])):
@@ -293,16 +293,15 @@ if player1 == 2 and player2 == 2:
 		if explorasi is not None and jumlah_experimen is not None and koefisien is not None is not output_file:
 			break
 
-elif player1 == 2 or player2 == 2:
+elif (player1 == 2 or player2 == 2 ) and mode_data == "1":
 	mode = 2
-	jumlah_experimen = None
+	jumlah_experimen_awal = None
 	koefisien = None
 	belajar_lagi = None
 	belajar = None
 	output_file = filename
 	explorasi = None
-	koefisien_awal = None
-	explorasi_awal = None
+	explorasi_selanjutnya = None
 	while True:
 		if belajar is None:
 			belajar = input("\nAI melakukan pembelajaran dulu sebelum bermain ? [y/n] : ")
@@ -312,20 +311,20 @@ elif player1 == 2 or player2 == 2:
 				continue
 			else:
 				if belajar in ["n","N"]:
-					jumlah_experimen_awal = 1
+					jumlah_experimen_awal = 0
 					koefisien_awal = 0
 					explorasi_awal = 0
-		if jumlah_experimen is None and (belajar in ['y','Y'] or belajar_lagi in ['y','Y'] ):
-			jumlah_experimen = input("\nMasukkan jumlah experimen : ")
-			if RepresentsInt(jumlah_experimen):
-				jumlah_experimen = int(jumlah_experimen)
-				if jumlah_experimen < 0:
+		if jumlah_experimen_awal is None and (belajar in ['y','Y'] or belajar_lagi in ['y','Y'] ):
+			jumlah_experimen_awal = input("\nMasukkan jumlah experimen : ")
+			if RepresentsInt(jumlah_experimen_awal):
+				jumlah_experimen_awal = int(jumlah_experimen_awal)
+				if jumlah_experimen_awal < 0:
 					print("\nInput harus berupa bilangan positif")
-					jumlah_experimen = None
+					jumlah_experimen_awal = None
 					continue
 			else:
 				print("\nInput harus berupa integer")
-				jumlah_experimen = None
+				jumlah_experimen_awal = None
 				continue
 		if koefisien is None and (belajar in ['y','Y'] or belajar_lagi in ['y','Y']):
 			koefisien = input("\nMasukkan nilai koefisien [0 - 1] : ")
@@ -348,22 +347,27 @@ elif player1 == 2 or player2 == 2:
 					explorasi = None
 					continue
 		if belajar_lagi is None:
-			belajar_lagi = input("\nAI tetap melakukan pembelajaran saat melawan user? [y/n] : ")
+			belajar_lagi = input("\nAI melakukan pembelajaran lagi saat bermain ? [y/n] : ")
 			if belajar_lagi not in ["y","Y","N","n"]:
 				print("Input tidak sesuai")
 				belajar_lagi = None
 				continue
-		if belajar is not None and belajar_lagi is not None:
-			if jumlah_experimen is None:
-				jumlah_experimen = jumlah_experimen_awal
-			if explorasi is None:
-				explorasi = 0
-			if koefisien is None:
-				koefisien = koefisien_awal
-			if explorasi_awal is None:
-				explorasi_awal = explorasi
-			if koefisien_awal is None:
-				koefisien_awal = koefisien
+			else:
+				if belajar_lagi in ["y","Y"]:
+					if explorasi_selanjutnya is None and (belajar in ['y','Y'] or belajar_lagi in ['y','Y']):
+						explorasi_selanjutnya = input("\nMasukkan persentase explorasi saat live [0-1] : ")
+						if RepresentsFloat(explorasi_selanjutnya):
+							explorasi_selanjutnya = float(explorasi_selanjutnya)
+							if explorasi_selanjutnya < 0 or explorasi_selanjutnya > 1:
+								print("\nInput harus berada diantara pada 0 <= N <= 1")
+								explorasi_selanjutnya = None
+								belajar_lagi = None
+								continue
+				else:
+					explorasi_selanjutnya = 0
+
+		if belajar is not None and belajar_lagi is not None and jumlah_experimen_awal is not None and koefisien is not None and explorasi is not None and explorasi_selanjutnya is not None:
+			jumlah_experimen = 1			
 			break
 else:
 	mode = 2
@@ -371,19 +375,22 @@ else:
 	koefisien = None
 	explorasi = 0
 	output_file = None
+	explorasi_selanjutnya = 0
+	jumlah_experimen_awal = 1
 
 
 # start = time.time()
 # data = createNimData(7)	
 # end = time.time()
-if jumlah_experimen > 1 and mode ==2:
+if jumlah_experimen_awal > 1 and mode ==2:
 	start = time.time()
-	play(data,explorasi_awal,jumlah_experimen,koefisien_awal,2,2,0)
+	play(data,explorasi,jumlah_experimen_awal,koefisien,2,2,0)
 	end = time.time()
+	print("\nCreate data success.\nRuntime : " + str(end - start) + " second")
+if mode ==	2:
 	while True:
 		print(json.dumps(data))
-		print("\nCreate data success.\nRuntime : " + str(end - start) + " second")
-		pemenang = play(data,0,1,koefisien,player1,player2,1)
+		pemenang = play(data,explorasi_selanjutnya,1,koefisien,player1,player2,1)
 		print("\nGAME OVER")
 		if pemenang == 1:
 			pemenang_s = player1s
