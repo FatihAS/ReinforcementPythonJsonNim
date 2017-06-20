@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<title>Tes</title>
+</head>
+<body>
+<select onchange="getData(this)" id="jumlahBatang">
+	<option value="" disabled selected>Pilih Kategori Anda</option>
+	<option value="5">5</option>
+	<option value="6">6</option>
+	<option value="7" selected>7</option>
+	<option value="8">8</option>
+	<option value="9">9</option>
+	<option value="10">10</option>
+	<option value="11">11</option>
+	<option value="12">12</option>
+	<option value="13">13</option>
+	<option value="14">14</option>
+	<option value="15">15</option>
+	
+</select>
+
+<select onchange="setPlayer1(this)" id="setPlayer1" style="background-color: #3498db">
+	<option value="" disabled selected>Masukkan Tipe Player 1</option>
+	<option value="1">Human</option>
+	<option value="2">AI</option>
+</select>
+
+<select onchange="setPlayer2(this)" id="setPlayer2" style="background-color: #2ecc71">
+	<option value="" disabled selected>Masukkan Tipe Player 2</option>
+	<option value="1">Human</option>
+	<option value="2">AI</option>
+</select>
+<div id="buttonContainer"></div>
+<br>
+<div id="container"">
+
+</div>
+</body>
+</html>
+<script type="text/javascript">
+	var player1;
+	var player2;
+	var status = 0;
+	var jumlahBatangGlobal;
+	var currentRound = 0;
+	var json_global;
+	var lastRoundBatangAktifGlobal;
+	var rondenya = 1;
+	var color_player1 = "#3498db";
+	var color_player2 = "#2ecc71";
+
+	function getData(s){
+		$.ajax({
+	        url: 'http://localhost/maching_learning/rein/'+ s.value +'.json',	        
+	        type: 'GET',
+    		crossDomain: true,
+	        success: function(json) {
+	            // Rates are in `json.rates`
+	            // Base currency (USD) is `json.base`
+	            // UNIX Timestamp when rates were collected is in `json.timestamp`        
+	            json_global = json;
+	            play();
+	        }
+    	});
+	}
+
+	function setPlayer1(i){
+		player1 = i.value;
+		if(player1 == 2){
+			var buttonPlay = document.createElement('button');
+			buttonPlay.onclick =  (function(wc){return function(){aiplay(wc);}})(1);
+			buttonPlay.innerHTML = "Play";
+			document.getElementById("buttonContainer").appendChild(buttonPlay);
+		}else{
+			$("#buttonContainer").empty();
+		}
+		checkButtonStatus();
+	}
+
+	function setPlayer2(i){
+		player2 = i.value;
+		checkButtonStatus();
+	}
+
+	function warning(s){
+		window.alert(s);
+	}
+
+	function arraysEqual(arr1, arr2) {
+	    if(arr1.length !== arr2.length)
+	        return false;
+	    for(var i = arr1.length; i--;) {
+	        if(arr1[i] !== arr2[i])
+	            return false;
+	    }
+
+	    return true;
+	}
+
+	function disableLastRoundButton(ronde,jumlahBatang){
+		for(var i = 0; i < jumlahBatang; i++){
+			document.getElementById('{"langkah":' + ronde +',"batang":'+(i+1)+'}').src = "batang2.png";
+			document.getElementById('{"langkah":' + ronde +',"batang":'+(i+1)+'}').onclick =  function() {};
+			document.getElementById('{"langkah":' + ronde +',"batang":'+(i+1)+'}').id = "";
+		}
+	}
+
+	function sortNumber(a,b) {
+	    return a - b;
+	}
+
+	function nextRound(lastbatang, jumlahBatang){
+		currentRound += 1;
+		if(jumlahBatang != 0){
+			document.getElementById("jumlahBatang").disabled = true;
+			document.getElementById("setPlayer1").disabled = true;
+			document.getElementById("setPlayer2").disabled = true;
+			nextId = 0;
+			new_form = [];
+			urutan_yang_benar = [];					
+			getData = false;
+			for(var i = 0; i < json_global.form.length; i++){
+				if(json_global.form[i] == lastbatang && getData == false){
+					new_form.push(jumlahBatang);
+					new_form.push(lastbatang - jumlahBatang);
+					getData = true;
+				}else{
+					new_form.push(json_global.form[i]);
+				}
+			}
+			new_form = new_form.sort(sortNumber);
+			new_form = new_form.reverse();
+			
+			for(var i = 0; i < json_global.child.length;i++){
+				if(arraysEqual(json_global.child[i].form,new_form)){
+					nextId = i;
+				}
+			}
+
+			disableLastRoundButton(currentRound - 1,lastRoundBatangAktifGlobal);
+			json_global = json_global.child[nextId];
+		}
+
+
+		var divContent = document.createElement('div');
+		divContent.id = "content"+currentRound;
+		divContent.style.textAlign = "center";
+		if(rondenya == 1){
+			divContent.style.backgroundColor = color_player1;
+		}else{
+			divContent.style.backgroundColor = color_player2;
+		}
+		var jumlahBatang = 0;
+		var batang_aktif = 0;
+		for(var i = 0;i < json_global.form.length;i++){
+			for(var j = 0; j < json_global.form[i];j++){
+				jumlahBatang += 1;
+				if(j < (json_global.form[i]/2)-1){
+					batang_aktif += 1;
+					var batang = document.createElement('img');
+					batang.id = '{"langkah":'+ currentRound +',"batang":'+ batang_aktif +'}'
+					batang.src = "batang.png";
+					batang.style.height = "200px";
+					if(status == 0){
+						batang.onclick =  function() { warning("Masukkan jenis player terlebih dahulu"); };
+					}
+					else if(status == 1){
+						batang.onclick =  (function(lastbatang,jumlahBatang){return function(){nextRound(lastbatang,jumlahBatang);}})(json_global.form[i],j+1);
+					}
+				}else{
+					var batang = document.createElement('img');
+					batang.src = "batang2.png";
+					batang.style.height = "200px";
+				}								
+				divContent.appendChild(batang);
+			}
+
+			if(i+1 != json_global.form.length){
+				var spasi = document.createElement('img');
+				spasi.src = "spasi.png";
+				spasi.style.height = "200px";
+				divContent.appendChild(spasi);
+			}
+		}
+		jumlahBatangGlobal = jumlahBatang;
+		lastRoundBatangAktifGlobal = batang_aktif;
+		document.getElementById('container').appendChild(divContent);
+		if(batang_aktif == 0){
+			document.getElementById("content"+currentRound).style.backgroundColor = "#c0392b";
+			if(rondenya == 1){
+				if(player2 == 1){
+					yangmenag = "Player 2 : Human";
+				}else{
+					yangmenang = "Player 2 : AI";
+				}
+			}else{
+				if(player1 == 1){
+					yangmenang = "Player 1 : Human";
+				}else{
+					yangmenang = "Player 1 : AI";
+				}
+			}
+			window.alert("The Winner : " + yangmenang);
+		}
+
+		if(rondenya == 1){
+			rondenya = 2;
+			if(player1 == 2){
+				aiplay(1);
+			}
+		}else if(rondenya == 2){
+			rondenya = 1;
+			if(player2 == 2){
+				aiplay(0);
+			}
+		}
+	}
+
+	function aiplay(wc){
+		var index_terbaik = 0;
+		for(var i = 0; i < json_global.child.length; i++){
+			if(i == 0){
+				index_terbaik = i;
+			}else{
+				if(wc == 1){
+					if(json_global.child[i].x > json_global.child[index_terbaik].x){
+						index_terbaik = i;
+					}
+				}else{
+					if(json_global.child[i].x < json_global.child[index_terbaik].x){
+						index_terbaik = i;
+					}
+				}
+			}
+		}
+
+		var form_sebelumnya = []
+		for(var i = 0; i < json_global.form.length; i++){
+			form_sebelumnya.push(json_global.form[i]);
+		}
+
+		var form_saatini = []
+		for(var i = 0; i < json_global.child[index_terbaik].form.length; i++){
+			form_saatini.push(json_global.child[index_terbaik].form[i]);
+		}
+
+		for(var i = 0; i < form_saatini.length; i++){
+			for(var j = 0; j < form_sebelumnya.length; j++){
+				if(form_sebelumnya[j] == form_saatini[i]){
+					form_sebelumnya.splice(j, 1);
+					form_saatini.splice(i,1);
+					j--;
+					i--;
+				}
+			}
+		}
+
+		console.log(form_sebelumnya.toString());
+		console.log(form_saatini.toString());
+
+		form_saatini = form_saatini.sort(sortNumber);
+
+		nextRound(form_sebelumnya[0],form_saatini[0]);
+	}
+
+	function play(){
+		// console.log(json)
+		$("#container").empty();
+		jumlahBatangGlobal = 0;
+		currentRound = 0;		
+		lastRoundBatangAktifGlobal = 0;
+		rondenya = 1;
+		color_player1 = "#3498db";
+		color_player2 = "#2ecc71";
+
+		nextRound(json_global,0);
+
+		// for(var i = 0; i < cart.length; i++){
+	 //        id_cart_helper.push(i);
+	 //        var toAdd = document.createElement('tr');
+	 //        var newCol = document.createElement('td');
+	 //        newCol.id = "nomor"+i;
+	 //        newCol.innerHTML = i+1;
+	 //        toAdd.appendChild(newCol);
+	 //        var newCol = document.createElement('td');
+	 //        newCol.id = "nama_barang"+i;
+	 //        newCol.innerHTML = cart[i]["nama_barang"];
+	 //        toAdd.appendChild(newCol);
+	 //        var newCol = document.createElement('td');
+	 //        newCol.id = "harga_satuan"+i;
+	 //        newCol.innerHTML = cart[i]["harga_satuan"];
+	 //        toAdd.appendChild(newCol);
+	 //        var newCol = document.createElement('td');
+	 //        newCol.id = "jumlah_barang"+i;
+	 //        newCol.innerHTML = cart[i]["jumlah_barang"];
+	 //        toAdd.appendChild(newCol);
+	 //        var newCol = document.createElement('td');
+	 //        newCol.id = "harga_total"+i;
+	 //        newCol.innerHTML = cart[i]["harga_satuan"] * cart[i]["jumlah_barang"] ;
+	 //        toAdd.appendChild(newCol);
+	 //        var newCol = document.createElement('td');
+	 //        newCol.id = "action"+i;
+	 //        newCol.innerHTML = '<button class="circular ui icon button" onclick="delItem(\''+ i +'\',\''+ cart[i]["jenis"] +'\', \''+ cart[i]["id_barang"] +'\')"><i class="icon minus"></i></button><button class="circular ui icon button" onclick="addItemFromCart(\''+ i +'\',\''+ cart[i]["jenis"] +'\', \''+ cart[i]["id_barang"] +'\')"><i class="icon plus"></i></button><button class="circular ui icon button" onclick="delItemFromCart(\''+ i +'\',\''+ cart[i]["jenis"] +'\', \''+ cart[i]["id_barang"] +'\')"><i class="icon trash"></i></button>';
+	 //        toAdd.appendChild(newCol);
+	 //        document.getElementById('body_cart').appendChild(toAdd);
+	 //    }
+
+
+	}
+
+	function checkButtonStatus(){
+		if(!player1 || !player2){
+			var new_status = 0;
+			if(status != new_status){
+				status = new_status;
+				changeBatangFunction(0);
+			}
+		}
+		if(player1 && player2){
+			var new_status = 1;
+			if(status != new_status){
+				status = new_status;
+				changeBatangFunction(1);
+			}
+		}
+	}
+
+	function changeBatangFunction(status){
+		if(status == 0){
+			for(var i = 0; i < jumlahBatangGlobal; i++){
+				document.getElementById('{"langkah":' + currentRound +',"batang":'+(i+1)+'}').onclick = (function(){return function(){warning("Masukkan jenis player terlebih dahulu");}});
+			}
+		} else if(status == 1){
+			for(var i = 0; i < jumlahBatangGlobal; i++){
+				if(i < (jumlahBatangGlobal/2)-1){
+					document.getElementById('{"langkah":' + currentRound +',"batang":'+(i+1)+'}').onclick = (function(i){return function(){nextRound(json_global.form[0],i);}})(i+1);
+				}
+			}
+		}
+	}
+
+	function inisialisasi(){
+		$.ajax({
+	        url: 'http://localhost/maching_learning/rein/7.json',	        
+	        type: 'GET',
+    		crossDomain: true,
+	        success: function(json) {
+	            // Rates are in `json.rates`
+	            // Base currency (USD) is `json.base`
+	            // UNIX Timestamp when rates were collected is in `json.timestamp`        
+	            json_global = json;
+
+	            play();
+	        }
+    	});
+    	$("#buttonContainer").empty();
+	}
+	inisialisasi();
+</script>
